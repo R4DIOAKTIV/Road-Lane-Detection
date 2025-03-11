@@ -114,7 +114,7 @@ def draw(img, peaks, rhos, thetas, roi_points):
             cv2.line(img, clipped_line[0], clipped_line[1], (0, 255, 0), 2)
 
     cv2.imshow('Lines', img)
-    
+    cv2.imwrite('Lines.jpg', img)
 def main():
     test_img = cv2.imread('test.jpg')
     height, width = test_img.shape[:2]
@@ -136,7 +136,7 @@ def main():
     cv2.imshow('ROI', roi_img)
     cv2.imshow('Edge', edge_img)
     cv2.imshow('Blur', blurried_img)
-    # cv2.imshow('refined peaks', refined_peaks)
+    
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
