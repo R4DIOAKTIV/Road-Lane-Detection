@@ -66,6 +66,33 @@ def hough_transform(image):
     # Return dictionary along with rhos and thetas arrays for conversion later
     return refined_peaks, rhos, thetas
 
+def line_intersection(line1, line2):
+    x1, y1, x2, y2 = line1
+    x3, y3, x4, y4 = line2
+
+    denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
+    if denom == 0:
+        return None
+
+    ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom
+    ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom
+
+    if 0 <= ua <= 1 and 0 <= ub <= 1:
+        x = x1 + ua * (x2 - x1)
+        y = y1 + ua * (y2 - y1)
+        return int(x), int(y)
+    return None
+
+def clip_line_to_polygon(line, polygon):
+    clipped_line = []
+    for i in range(len(polygon)):
+        p1 = polygon[i]
+        p2 = polygon[(i + 1) % len(polygon)]
+        intersection = line_intersection(line, (p1[0], p1[1], p2[0], p2[1]))
+        if intersection:
+            clipped_line.append(intersection)
+    return clipped_line
+
 def draw(img, peaks, rhos, thetas, roi_points):
     # For each peak (which is stored as indices), convert to actual rho and theta
     for (rho_idx, theta_idx), value in peaks.items():
@@ -82,12 +109,9 @@ def draw(img, peaks, rhos, thetas, roi_points):
         y2 = int(y0 - 1000 * (a))
         
         # Clip the line to the polygon
-        for i in range(len(roi_points)):
-            p1 = roi_points[i]
-            p2 = roi_points[(i + 1) % len(roi_points)]
-            if cv2.clipLine((p1[0], p1[1], p2[0], p2[1]), (x1, y1), (x2, y2)):
-                cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                break
+        clipped_line = clip_line_to_polygon((x1, y1, x2, y2), roi_points)
+        if len(clipped_line) == 2:
+            cv2.line(img, clipped_line[0], clipped_line[1], (0, 255, 0), 2)
 
     cv2.imshow('Lines', img)
     
