@@ -53,7 +53,7 @@ def hough_transform(image):
     cv2.imshow('Accumulator', accumulator / np.max(accumulator))
 
     # Non-maximum suppression: get peaks above a threshold, then verify local maximum
-    threshold = 0.4 * np.max(accumulator)
+    threshold = 0.86 * np.max(accumulator)
     peaks = np.argwhere(accumulator > threshold)
     refined_peaks = {}
 
@@ -114,17 +114,18 @@ def draw(img, peaks, rhos, thetas, roi_points):
             cv2.line(img, clipped_line[0], clipped_line[1], (0, 255, 0), 2)
 
     cv2.imshow('Lines', img)
-    cv2.imwrite('Lines.jpg', img)
+    cv2.imwrite('Lines2.jpg', img)
 def main():
-    test_img = cv2.imread('test.jpg')
+    test_img = cv2.imread('3.jpg')
+    test_img = cv2.resize(test_img, (640, 480))
     height, width = test_img.shape[:2]
      # Define points for the quadrilateral ROI
     roi_points = np.array([
-        [width, height],  # Bottom-right corner
-        [0, height],  # Bottom-left corner
-        [0, height - 160],  # Bottom-left corner
-        [width * 1 // 4, height * 4 // 9],  # Right middle of upper third
-        [width * 2 // 4, height * 4 // 9]  # Left middle of upper third
+        [width+20, height],  # Bottom-right corner
+        [-20, height],  # Bottom-left corner
+        # [0, height - 160],  # Bottom-left corner
+        [width * 2 // 4 - 10, height * 6 // 10],  # Right middle of upper third
+        # [width * 2 // 4, height * 3 // 8]  # Left middle of upper third
     ], dtype=np.int32)
     
     blurried_img = median_blur(test_img)

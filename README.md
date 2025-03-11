@@ -1,11 +1,10 @@
 # Road Lane Detection
 
-This project implements a road lane detection system using OpenCV and NumPy. Below are the main functions used in the project along with their explanations and code snippets.
+This project implements a road lane detection system using OpenCV and NumPy. Below is a detailed explanation of the functions used in the `main.py` script.
 
 ## Functions
 
-### 1. `median_blur`
-
+### `median_blur(img)`
 Applies a median blur to the input image to reduce noise.
 
 ```python
@@ -13,8 +12,11 @@ def median_blur(img):
     return cv2.medianBlur(img, 7)
 ```
 
-### 2. `canny_edge_detector`
+- **Parameters:**
+    - `img`: The input image.
+- **Returns:** The blurred image.
 
+### `canny_edge_detector(img)`
 Applies the Canny edge detection algorithm to the input image to detect edges.
 
 ```python
@@ -22,9 +24,12 @@ def canny_edge_detector(img):
     return cv2.Canny(img, 100, 200)
 ```
 
-### 3. `get_ROI_edge`
+- **Parameters:**
+    - `img`: The input image.
+- **Returns:** The edge-detected image.
 
-Extracts the region of interest (ROI) from the edge-detected image and applies a mask.
+### `get_ROI_edge(edge_img, img, roi_points=None)`
+Extracts the region of interest (ROI) from the edge-detected image and the original image.
 
 ```python
 def get_ROI_edge(edge_img, img, roi_points=None):
@@ -33,11 +38,22 @@ def get_ROI_edge(edge_img, img, roi_points=None):
     cv2.fillPoly(mask, [roi_points], 255)
     masked = cv2.bitwise_and(edge_img, mask)
     masked_img = cv2.bitwise_and(img, img, mask=mask)
+    img_with_points = cv2.cvtColor(edge_img, cv2.COLOR_GRAY2BGR)
+    for point in roi_points:
+        cv2.circle(img_with_points, tuple(point), 5, (0, 255, 0), -1)
+    cv2.imshow('Points', img_with_points)
+    cv2.imshow('Masked', masked)
+    cv2.imshow('Masked Image', masked_img)
     return masked
 ```
 
-### 4. `hough_transform`
+- **Parameters:**
+    - `edge_img`: The edge-detected image.
+    - `img`: The original image.
+    - `roi_points`: The points defining the ROI polygon.
+- **Returns:** The masked edge-detected image.
 
+### `hough_transform(image)`
 Performs the Hough Transform to detect lines in the edge-detected image.
 
 ```python
@@ -54,6 +70,7 @@ def hough_transform(image):
         for t_idx in range(len(thetas)):
             rho = int(x * np.cos(thetas[t_idx]) + y * np.sin(thetas[t_idx]) + max_dist)
             accumulator[rho, t_idx] += 1
+    cv2.imshow('Accumulator', accumulator / np.max(accumulator))
     threshold = 0.4 * np.max(accumulator)
     peaks = np.argwhere(accumulator > threshold)
     refined_peaks = {}
@@ -64,9 +81,12 @@ def hough_transform(image):
     return refined_peaks, rhos, thetas
 ```
 
-### 5. `line_intersection`
+- **Parameters:**
+    - `image`: The edge-detected image.
+- **Returns:** A dictionary of peaks, and arrays of rhos and thetas.
 
-Finds the intersection point of two lines.
+### `line_intersection(line1, line2)`
+Calculates the intersection point of two lines.
 
 ```python
 def line_intersection(line1, line2):
@@ -84,8 +104,12 @@ def line_intersection(line1, line2):
     return None
 ```
 
-### 6. `clip_line_to_polygon`
+- **Parameters:**
+    - `line1`: The first line defined by two points (x1, y1, x2, y2).
+    - `line2`: The second line defined by two points (x3, y3, x4, y4).
+- **Returns:** The intersection point as a tuple (x, y) or `None` if lines do not intersect.
 
+### `clip_line_to_polygon(line, polygon)`
 Clips a line to fit within a polygon.
 
 ```python
@@ -100,9 +124,13 @@ def clip_line_to_polygon(line, polygon):
     return clipped_line
 ```
 
-### 7. `draw`
+- **Parameters:**
+    - `line`: The line to be clipped.
+    - `polygon`: The polygon defined by its vertices.
+- **Returns:** The clipped line as a list of intersection points.
 
-Draws the detected lines on the image.
+### `draw(img, peaks, rhos, thetas, roi_points)`
+Draws the detected lines on the original image.
 
 ```python
 def draw(img, peaks, rhos, thetas, roi_points):
@@ -124,9 +152,15 @@ def draw(img, peaks, rhos, thetas, roi_points):
     cv2.imwrite('Lines.jpg', img)
 ```
 
-### 8. `main`
+- **Parameters:**
+    - `img`: The original image.
+    - `peaks`: The dictionary of peaks from the Hough Transform.
+    - `rhos`: The array of rho values.
+    - `thetas`: The array of theta values.
+    - `roi_points`: The points defining the ROI polygon.
 
-Main function to execute the lane detection pipeline.
+### `main()`
+The main function that orchestrates the lane detection process.
 
 ```python
 def main():
@@ -149,30 +183,23 @@ def main():
     cv2.imshow('Blur', blurried_img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
-if __name__ == '__main__':
-    main()
 ```
 
-## Usage
+- **Steps:**
+    1. Reads the input image.
+    2. Defines the region of interest (ROI) points.
+    3. Applies median blur to the image.
+    4. Detects edges using the Canny edge detector.
+    5. Extracts the ROI from the edge-detected image.
+    6. Performs the Hough Transform to detect lines.
+    7. Draws the detected lines on the original image.
+    8. Displays the results.
+### Test 
+Input:
+![Input](test.jpg)
 
-To run the lane detection system, execute the `main.py` script. Ensure you have OpenCV and NumPy installed in your Python environment.
+![Output](Lines.jpg)
 
-```bash
-python main.py
-```
+![Input](3.jpg)
 
-Make sure to place a test image named `test.jpg` in the same directory as the script.
-
-## Result
-### Test Image
-
-Below is an example of the test image used for lane detection:
-
-![Test Image](test.jpg)
-
-### Detected Lines
-
-Below is the result image with detected lanes drawn:
-
-![Detected Lines](Lines.jpg)
+![Output](Lines2.jpg)
